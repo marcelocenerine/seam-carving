@@ -2,3 +2,5 @@
 *.iml
 build/
 bin/
+project/
+target/
