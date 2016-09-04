@@ -73,7 +73,7 @@ class SeamCarver private(var width: Int, var height: Int) {
       val dist = distTo(col)(row)
       val e = energy(col, row)
 
-      for ((adjCol, adjRow) <- adjHorizontal(col, row)) {
+      for ((adjCol, adjRow) <- horizontallyAdjacentPixels(col, row)) {
         if (e + dist < distTo(adjCol)(adjRow)) {
           distTo(adjCol)(adjRow) = e + dist
           edgeTo(adjCol)(adjRow) = (col, row)
@@ -94,7 +94,7 @@ class SeamCarver private(var width: Int, var height: Int) {
     (seam take width) reverse
   }
 
-  private def adjHorizontal(pixel: Pos): Seq[Pos] = {
+  private def horizontallyAdjacentPixels(pixel: Pos): Seq[Pos] = {
     val result = mutable.ListBuffer[Pos]()
     val (c, r) = pixel
 
@@ -112,11 +112,17 @@ class SeamCarver private(var width: Int, var height: Int) {
     require(seam.length == width, "Seam length does not match image width")
     assertSeamIsValid(seam)
 
-    seam.foreach { case (c, r) => pixels(c)(r) = pixels(c)(r + 1) }
-    height -= height
+    for {
+      (col, row) <- seam
+      r <- row until (height - 1)
+    } pixels(col)(r) = pixels(col)(r + 1)
+
+    height -= 1
   }
 
-  def findVerticalSeam: Seam = ???
+  def findVerticalSeam: Seam = {
+    ???
+  }
 
   def removeVerticalSeam(seam: Seam): Unit = {
     require(width > 1, "Image cannot be vertically resized")

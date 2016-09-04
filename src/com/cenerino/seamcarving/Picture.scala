@@ -1,9 +1,11 @@
 package com.cenerino.seamcarving
 
+import java.awt.FlowLayout
 import java.awt.image.BufferedImage
 import java.io.File
 import java.net.URL
 import javax.imageio.ImageIO
+import javax.swing.{ImageIcon, JLabel, JFrame}
 
 class Picture private(private val image: BufferedImage) {
 
@@ -44,7 +46,14 @@ class Picture private(private val image: BufferedImage) {
   }
 
   def show: Unit = {
-    // TODO
+    val label = new JLabel()
+    label.setIcon(new ImageIcon(image))
+    val frame = new JFrame()
+    frame.add(label)
+    frame.setLayout(new FlowLayout())
+    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
+    frame.pack()
+    frame.setVisible(true)
   }
 }
 
