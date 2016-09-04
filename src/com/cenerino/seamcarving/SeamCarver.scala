@@ -5,8 +5,7 @@ import scala.math._
 
 class SeamCarver private(var width: Int, var height: Int) {
 
-  private val pixels = Array.ofDim[Int](width * height)
-  private val originalWidth = width
+  private val pixels = Array.ofDim[Int](width, height)
 
   type Pos = (Int, Int)
   type Seam = Seq[Pos]
@@ -17,16 +16,8 @@ class SeamCarver private(var width: Int, var height: Int) {
     for {
       c <- 0 until width
       r <- 0 until height
-    } pixels(idx(c, r)) = pic.getRGB(c, r)
+    } pixels(c)(r) = pic.getRGB(c, r)
   }
-
-  private def idx(pixel: Pos): Int = pixel match {
-    case (c, r) => r * originalWidth + c
-  }
-
-  private def row(idx: Int): Int = idx / originalWidth
-
-  private def col(idx: Int): Int = idx % originalWidth
 
   def picture: Picture = {
     val pic = Picture(width, height)
@@ -34,7 +25,7 @@ class SeamCarver private(var width: Int, var height: Int) {
     for {
       c <- 0 until width
       r <- 0 until height
-    } pic.setRGB(c, r, pixels(idx(c, r)))
+    } pic.setRGB(c, r, pixels(c)(r))
 
     pic
   }
@@ -45,8 +36,8 @@ class SeamCarver private(var width: Int, var height: Int) {
 
     if (c == 0 || c == width - 1 || r == 0 || r == height - 1) 1000
     else {
-      val deltaX = delta(pixels(idx(c - 1, r)), pixels(idx(c + 1, r)))
-      val deltaY = delta(pixels(idx(c, r - 1)), pixels(idx(c, r + 1)))
+      val deltaX = delta(pixels(c - 1)(r), pixels(c + 1)(r))
+      val deltaY = delta(pixels(c)(r - 1), pixels(c)(r + 1))
       sqrt(deltaX + deltaY)
     }
   }
@@ -65,63 +56,52 @@ class SeamCarver private(var width: Int, var height: Int) {
   private def blue(rgb: Int): Int = (rgb >> 0) & 0xFF
 
   def findHorizontalSeam: Seam = {
-    val n = height * originalWidth
-    val distTo = Array.fill(n)(Double.PositiveInfinity)
-    val edgeTo = Array.ofDim[Int](n)
-    val visited = Array.ofDim[Boolean](n)
-    val queue = mutable.Queue[Int]()
+    val distTo = Array.fill(width, height)(Double.PositiveInfinity)
+    val edgeTo = Array.ofDim[Pos](width, height)
+    val visited = Array.ofDim[Boolean](width, height)
+    val queue = mutable.Queue[Pos]()
 
-    for (r <- 0 until height) {
-      val pixel = idx(0, r)
-      distTo(pixel) = energy(0, r)
-      queue += pixel
+    // populates first column
+    for (r <- 0 until height; c = 0) {
+      distTo(c)(r) = energy(c, r)
+      queue += ((c, r))
     }
 
     while (queue.nonEmpty) {
-      val from = queue.dequeue
+      val (col, row) = queue.dequeue
       // relax
-      val dist = distTo(from)
+      val dist = distTo(col)(row)
+      val e = energy(col, row)
 
-      for (adj <- adjHorizontal(from)) {
-        val r = row(adj)
-        val c = col(adj)
-        val e = energy(c, r)
-
-        if (e + dist < distTo(adj)) {
-          distTo(adj) = e + dist
-          edgeTo(adj) = from
+      for ((adjCol, adjRow) <- adjHorizontal(col, row)) {
+        if (e + dist < distTo(adjCol)(adjRow)) {
+          distTo(adjCol)(adjRow) = e + dist
+          edgeTo(adjCol)(adjRow) = (col, row)
         }
 
-        if (!visited(adj)) {
-          queue += adj
-          visited(adj) = true
+        if (!visited(adjCol)(adjRow)) {
+          queue += ((adjCol, adjRow))
+          visited(adjCol)(adjRow) = true
         }
       }
     }
 
     // find min horizontal seam
     val lastCol = width - 1
-    // TODO simplify it
-    val min = Stream.range(0, height)
-      .map(row => idx(lastCol, row))
-      .map(idx => (idx, distTo(idx)))
-      .reduceLeft((a, b) => if (a._2 <= b._2) a else b)
-      ._1
-    // builds the seam moving backwards from min
-    lazy val seam: Stream[Int] = Stream.cons(min, seam.map(e => edgeTo(e)))
-    // combine the column indexes with the row indexes
-    (0 until width) zip (seam.map(idx => row(idx)))
+    val rowOfLastPixelInSeam = (0 until height).map(r => (r, distTo(lastCol)(r))).reduceLeft((a, b) => if (a._2 <= b._2) a else b)._1
+    val lastPixelInSeam: Pos = (lastCol, rowOfLastPixelInSeam)
+    lazy val seam: Stream[Pos] = Stream.cons(lastPixelInSeam, seam.map { case (c, r) => edgeTo(c)(r) })
+    (seam take width) reverse
   }
 
-  private def adjHorizontal(pixel: Int): Seq[Integer] = {
-    val result = mutable.ListBuffer[Integer]()
-    val c = col(pixel)
-    val r = row(pixel)
+  private def adjHorizontal(pixel: Pos): Seq[Pos] = {
+    val result = mutable.ListBuffer[Pos]()
+    val (c, r) = pixel
 
     if (c < width - 1) {
-      result += idx(c + 1, r)
-      if (r > 0) result += idx(c + 1, r - 1)
-      if (r < height - 1) result += idx(c + 1, r + 1)
+      result += ((c + 1, r))
+      if (r > 0) result += ((c + 1, r - 1))
+      if (r < height - 1) result += ((c + 1, r + 1))
     }
 
     result
@@ -132,7 +112,7 @@ class SeamCarver private(var width: Int, var height: Int) {
     require(seam.length == width, "Seam length does not match image width")
     assertSeamIsValid(seam)
 
-    seam.foreach { case (c, r) => pixels(idx(c, r)) = pixels(idx(c, r + 1)) }
+    seam.foreach { case (c, r) => pixels(c)(r) = pixels(c)(r + 1) }
     height -= height
   }
 
@@ -143,13 +123,13 @@ class SeamCarver private(var width: Int, var height: Int) {
     require(seam.length == height, "Seam length does not match image height")
     assertSeamIsValid(seam)
 
-    seam.foreach { case (c, r) => pixels(idx(c, r)) = pixels(idx(c + 1, r)) }
+    seam.foreach { case (c, r) => pixels(c)(r) = pixels(c + 1)(r) }
     width -= width
   }
 
   private def assertSeamIsValid(seam: Seam): Unit = {
     seam.foreach(pixel => assertIsWithinBounds(pixel))
-    require(((seam tail) zip (seam)).forall { case (cur, pre) => isValidAdjacency(cur, pre) },
+    require(((seam) zip (seam tail)).forall { case (pre, current) => isValidAdjacency(pre, current) },
       "One or more adjacent entries differ by more than 1 pixel")
   }
 
@@ -157,7 +137,7 @@ class SeamCarver private(var width: Int, var height: Int) {
     case (c, r) => if (c < 0 || c >= width || r < 0 || r >= height) throw new IndexOutOfBoundsException("invalid index")
   }
 
-  private def isValidAdjacency(current: Pos, predecessor: Pos): Boolean = {
+  private def isValidAdjacency(predecessor: Pos, current: Pos): Boolean = {
     val (preCol, preRow) = predecessor
     val (curCol, curRow) = current
     abs(curCol - preCol) <= 1 && abs(curRow - preRow) <= 1
