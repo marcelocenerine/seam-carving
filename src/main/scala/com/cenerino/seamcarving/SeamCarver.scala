@@ -46,7 +46,7 @@ class SeamCarver private(var width: Int, var height: Int) {
     val r = red(rgb1) - red(rgb2)
     val g = green(rgb1) - green(rgb2)
     val b = blue(rgb1) - blue(rgb2)
-    pow(r, 2) + Math.pow(g, 2) + Math.pow(b, 2)
+    pow(r, 2) + pow(g, 2) + pow(b, 2)
   }
 
   private def red(rgb: Int): Int = (rgb >> 16) & 0xFF
