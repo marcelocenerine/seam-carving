@@ -86,11 +86,9 @@ class SeamCarver private(var width: Int, var height: Int) {
       }
     }
 
-    // find min horizontal seam
-    val lastCol = width - 1
-    val rowOfLastPixelInSeam = (0 until height).map(r => (r, distTo(lastCol)(r))).reduceLeft((a, b) => if (a._2 <= b._2) a else b)._1
-    val lastPixelInSeam: Pos = (lastCol, rowOfLastPixelInSeam)
-    lazy val seam: Stream[Pos] = Stream.cons(lastPixelInSeam, seam.map { case (c, r) => edgeTo(c)(r) })
+    val lastColInSeam = width - 1
+    val lastRowInSeam = (0 until height).map(r => (r, distTo(lastColInSeam)(r))).reduceLeft((a, b) => if (b._2 > a._2) b else a)._1
+    lazy val seam: Stream[Pos] = Stream.cons((lastColInSeam, lastRowInSeam), seam.map { case (c, r) => edgeTo(c)(r) })
     (seam take width) reverse
   }
 
@@ -121,7 +119,53 @@ class SeamCarver private(var width: Int, var height: Int) {
   }
 
   def findVerticalSeam: Seam = {
-    ???
+    val distTo = Array.fill(width, height)(Double.PositiveInfinity)
+    val edgeTo = Array.ofDim[Pos](width, height)
+    val visited = Array.ofDim[Boolean](width, height)
+    val queue = mutable.Queue[Pos]()
+
+    // populates first row
+    for (c <- 0 until width; r = 0) {
+      distTo(c)(r) = energy(c, r)
+      queue += ((c, r))
+    }
+
+    while (queue.nonEmpty) {
+      val (col, row) = queue.dequeue
+      // relax
+      val dist = distTo(col)(row)
+      val e = energy(col, row)
+
+      for ((adjCol, adjRow) <- verticallyAdjacentPixels(col, row)) {
+        if (e + dist < distTo(adjCol)(adjRow)) {
+          distTo(adjCol)(adjRow) = e + dist
+          edgeTo(adjCol)(adjRow) = (col, row)
+        }
+
+        if (!visited(adjCol)(adjRow)) {
+          queue += ((adjCol, adjRow))
+          visited(adjCol)(adjRow) = true
+        }
+      }
+    }
+
+    val lastRowInSeam = height - 1
+    val lastColInSeam = (0 until width).map(c => (c, distTo(c)(lastRowInSeam))).reduceLeft((a, b) => if (b._2 > a._2) a else b)._1
+    lazy val seam: Stream[Pos] = Stream.cons((lastColInSeam, lastRowInSeam), seam.map { case (c, r) => edgeTo(c)(r) })
+    (seam take height) reverse
+  }
+
+  private def verticallyAdjacentPixels(pixel: Pos): Seq[Pos] = {
+    val result = mutable.ListBuffer[Pos]()
+    val (c, r) = pixel
+
+    if (r < height - 1) {
+      result += ((c, r + 1))
+      if (c > 0) result += ((c - 1, r + 1))
+      if (c < width - 1) result += ((c + 1, r + 1))
+    }
+
+    result
   }
 
   def removeVerticalSeam(seam: Seam): Unit = {
@@ -129,8 +173,12 @@ class SeamCarver private(var width: Int, var height: Int) {
     require(seam.length == height, "Seam length does not match image height")
     assertSeamIsValid(seam)
 
-    seam.foreach { case (c, r) => pixels(c)(r) = pixels(c + 1)(r) }
-    width -= width
+    for {
+      (col, row) <- seam
+      c <- col until (width - 1)
+    } pixels(c)(row) = pixels(c + 1)(row)
+
+    width -= 1
   }
 
   private def assertSeamIsValid(seam: Seam): Unit = {
