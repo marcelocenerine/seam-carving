@@ -30,12 +30,12 @@ class Picture private(private val image: BufferedImage) {
 
   def height: Int = image.getHeight
 
-  def setRGB(x: Int, y: Int, rgb: Int): Unit = {
+  def rgb(x: Int, y: Int, rgb: Int): Unit = {
     assertIndexesAreWithinBounds(x, y)
     image.setRGB(x, y, rgb)
   }
 
-  def getRGB(x: Int, y: Int): Int = {
+  def rgb(x: Int, y: Int): Int = {
     assertIndexesAreWithinBounds(x, y)
     image.getRGB(x, y)
   }

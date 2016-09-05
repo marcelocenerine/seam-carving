@@ -16,7 +16,7 @@ class SeamCarver private(var width: Int, var height: Int) {
     for {
       c <- 0 until width
       r <- 0 until height
-    } pixels(c)(r) = pic.getRGB(c, r)
+    } pixels(c)(r) = pic.rgb(c, r)
   }
 
   def picture: Picture = {
@@ -25,7 +25,7 @@ class SeamCarver private(var width: Int, var height: Int) {
     for {
       c <- 0 until width
       r <- 0 until height
-    } pic.setRGB(c, r, pixels(c)(r))
+    } pic.rgb(c, r, pixels(c)(r))
 
     pic
   }
