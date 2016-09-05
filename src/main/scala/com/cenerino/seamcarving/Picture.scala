@@ -45,10 +45,11 @@ class Picture private(private val image: BufferedImage) {
     if (y < 0 || y >= height) throw new IndexOutOfBoundsException("Invalid y index")
   }
 
-  def show: Unit = {
+  def display(title: String = null): Unit = {
     val label = new JLabel()
     label.setIcon(new ImageIcon(image))
     val frame = new JFrame()
+    frame.setTitle(title)
     frame.add(label)
     frame.setLayout(new FlowLayout())
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)

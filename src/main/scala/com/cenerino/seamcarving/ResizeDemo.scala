@@ -28,6 +28,6 @@ object ResizeDemo extends App {
 
   println(s"Output image is ${outputPicture.width} columns by ${outputPicture.height} rows")
 
-  inputPicture.show
-  outputPicture.show
+  inputPicture display (title = "Input")
+  outputPicture display (title = "Output")
 }
