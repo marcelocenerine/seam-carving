@@ -15,19 +15,19 @@ object ResizeDemo extends App {
   for (row <- 1 to removeRows) {
     val seam = seamCarver.findHorizontalSeam
     println(s"Removing horizontal seam #$row of $removeRows: $seam")
-    seamCarver removeHorizontalSeam seam
+    seamCarver removeSeam seam
   }
 
   for (col <- 1 to removeCols) {
     val seam = seamCarver.findVerticalSeam
     println(s"Removing vertical seam #$col of $removeCols: $seam")
-    seamCarver removeVerticalSeam seam
+    seamCarver removeSeam seam
   }
 
   val outputPicture = seamCarver.picture
 
   println(s"Output image is ${outputPicture.width} columns by ${outputPicture.height} rows")
 
-  inputPicture display (title = "Input")
-  outputPicture display (title = "Output")
+  inputPicture display (title = s"Input ${inputPicture.width} x ${inputPicture.height}")
+  outputPicture display (title = s"Output ${outputPicture.width} x ${outputPicture.height}")
 }

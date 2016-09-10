@@ -2,6 +2,7 @@ package com.cenerino.seamcarving
 
 import scala.collection.mutable
 import scala.math._
+import SeamCarver._
 
 class SeamCarver private(var width: Int, var height: Int) {
 
@@ -34,7 +35,7 @@ class SeamCarver private(var width: Int, var height: Int) {
     assertIsWithinBounds(pixel)
     val (c, r) = pixel
 
-    if (c == 0 || c == width - 1 || r == 0 || r == height - 1) 1000
+    if (c == 0 || c == width - 1 || r == 0 || r == height - 1) BorderEnergy
     else {
       val deltaX = delta(pixels(c - 1)(r), pixels(c + 1)(r))
       val deltaY = delta(pixels(c)(r - 1), pixels(c)(r + 1))
@@ -105,19 +106,6 @@ class SeamCarver private(var width: Int, var height: Int) {
     result
   }
 
-  def removeHorizontalSeam(seam: Seam): Unit = {
-    require(height > 1, "Image cannot be horizontally resized")
-    require(seam.length == width, "Seam length does not match image width")
-    assertSeamIsValid(seam)
-
-    for {
-      (col, row) <- seam
-      r <- row until (height - 1)
-    } pixels(col)(r) = pixels(col)(r + 1)
-
-    height -= 1
-  }
-
   def findVerticalSeam: Seam = {
     val distTo = Array.fill(width, height)(Double.PositiveInfinity)
     val edgeTo = Array.ofDim[Pos](width, height)
@@ -168,10 +156,28 @@ class SeamCarver private(var width: Int, var height: Int) {
     result
   }
 
-  def removeVerticalSeam(seam: Seam): Unit = {
+  def removeSeam(seam: Seam): Unit = {
+    seam.foreach { assertIsWithinBounds(_) }
+    assertPixelsAreAdjacent(seam)
+
+    if (seam.length == width) removeHorizontalSeam(seam)
+    else if (seam.length == height) removeVerticalSeam(seam)
+    else throw new IllegalArgumentException("Invalid seam length")
+  }
+
+  private def removeHorizontalSeam(seam: Seam): Unit = {
+    require(height > 1, "Image cannot be horizontally resized")
+
+    for {
+      (col, row) <- seam
+      r <- row until (height - 1)
+    } pixels(col)(r) = pixels(col)(r + 1)
+
+    height -= 1
+  }
+
+  private def removeVerticalSeam(seam: Seam): Unit = {
     require(width > 1, "Image cannot be vertically resized")
-    require(seam.length == height, "Seam length does not match image height")
-    assertSeamIsValid(seam)
 
     for {
       (col, row) <- seam
@@ -181,14 +187,15 @@ class SeamCarver private(var width: Int, var height: Int) {
     width -= 1
   }
 
-  private def assertSeamIsValid(seam: Seam): Unit = {
-    seam.foreach(pixel => assertIsWithinBounds(pixel))
-    require(((seam) zip (seam tail)).forall { case (pre, current) => isValidAdjacency(pre, current) },
+  private def assertPixelsAreAdjacent(seam: Seam): Unit = {
+    require(((seam) zip (seam tail))
+        .forall { case (pre, current) => isValidAdjacency(pre, current) },
       "One or more adjacent entries differ by more than 1 pixel")
   }
 
-  private def assertIsWithinBounds(pixel: Pos): Unit = pixel match {
-    case (c, r) => if (c < 0 || c >= width || r < 0 || r >= height) throw new IndexOutOfBoundsException("invalid index")
+  private def assertIsWithinBounds(pixel: Pos): Unit = {
+    val (c, r) = pixel
+    if (c < 0 || c >= width || r < 0 || r >= height) throw new IndexOutOfBoundsException("invalid index")
   }
 
   private def isValidAdjacency(predecessor: Pos, current: Pos): Boolean = {
@@ -199,5 +206,6 @@ class SeamCarver private(var width: Int, var height: Int) {
 }
 
 object SeamCarver {
+  val BorderEnergy = 1000
   def apply(pic: Picture): SeamCarver = new SeamCarver(pic)
 }
