@@ -49,8 +49,6 @@ class Picture private(private val image: BufferedImage) {
     image.getRGB(x, y)
   }
 
-  def rgb(x: Int, y: Int, color: Color): Unit = rgb(x, y, color.getRGB)
-
   private def assertIndexesAreWithinBounds(x: Int, y: Int): Unit = {
     if (x < 0 || x >= width) throw new IndexOutOfBoundsException("Invalid x index")
     if (y < 0 || y >= height) throw new IndexOutOfBoundsException("Invalid y index")

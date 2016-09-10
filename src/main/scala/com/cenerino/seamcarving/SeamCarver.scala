@@ -1,5 +1,7 @@
 package com.cenerino.seamcarving
 
+import java.awt.Color
+
 import scala.collection.mutable
 import scala.math._
 import SeamCarver._
@@ -28,8 +30,33 @@ class SeamCarver private(var width: Int, var height: Int) {
     pic
   }
 
-  def energy(pixel: Pos): Double = {
-    assertIsWithinBounds(pixel)
+  def energyPicture(showVerticalSeam: Boolean = false, showHorizontalSeam: Boolean = false): Picture = {
+    val picture = Picture(width, height)
+    val grayValues = energyMatrix
+
+    // maximum gray scale value (ignoring border pixels)
+    val maxVal = (for {col <- 1 until width - 1; row <- 1 until height - 1} yield grayValues(col)(row)).max
+
+    if (maxVal != 0) {
+      for {
+        col <- 0 until width
+        row <- 0 until height
+      } {
+        val normalized = min((grayValues(col)(row) / maxVal).toFloat, 1.0f)
+        picture.rgb(col, row, new Color(normalized, normalized, normalized).getRGB)
+      }
+    }
+
+    if (showVerticalSeam) drawSeam(picture, findVerticalSeam)
+    if (showHorizontalSeam) drawSeam(picture, findHorizontalSeam)
+
+    picture
+  }
+
+  private def energyMatrix: Array[Array[Double]] =
+    (0 until width).map(col => (0 until height).map(row => energy(col, row)).toArray).toArray
+
+  private def energy(pixel: Pos): Double = {
     val (c, r) = pixel
 
     if (c == 0 || c == width - 1 || r == 0 || r == height - 1) BorderEnergy
@@ -52,6 +79,9 @@ class SeamCarver private(var width: Int, var height: Int) {
   private def green(rgb: Int): Int = (rgb >> 8) & 0xFF
 
   private def blue(rgb: Int): Int = (rgb >> 0) & 0xFF
+
+  private def drawSeam(picture: Picture, seam: Seam): Unit =
+    seam.foreach { case (col, row) => picture.rgb(col, row, Color.RED.getRGB) }
 
   def findHorizontalSeam: Seam = {
     val distTo = Array.fill(width, height)(Double.PositiveInfinity)
