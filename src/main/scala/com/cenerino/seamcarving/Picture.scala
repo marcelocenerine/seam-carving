@@ -26,6 +26,15 @@ class Picture private(private val image: BufferedImage) {
     this(new BufferedImage(width, height, 1))
   }
 
+  def this(picture: Picture) {
+    this(picture.width, picture.height)
+
+    for {
+      x <- 0 until picture.width
+      y <- 0 until picture.height
+    } image.setRGB(x, y, picture.rgb(x, y))
+  }
+
   def width: Int = image.getWidth
 
   def height: Int = image.getHeight
@@ -62,5 +71,6 @@ class Picture private(private val image: BufferedImage) {
 
 object Picture {
   def apply(path: String): Picture = new Picture(path)
+  def apply(picture: Picture): Picture = new Picture(picture)
   def apply(width: Int, height: Int): Picture = new Picture(width, height)
 }

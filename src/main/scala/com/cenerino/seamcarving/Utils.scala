@@ -1,7 +1,7 @@
 package com.cenerino.seamcarving
 
 import java.awt.Color
-
+import SeamCarver._
 import scala.math._
 
 object Utils {
@@ -37,5 +37,11 @@ object Utils {
     } energyMatrix(col)(row) = seamCarver.energy(col, row)
 
     energyMatrix
+  }
+
+  def seamOverlay(picture: Picture, seams: Seam*): Picture = {
+    val overlaid = Picture(picture)
+    seams.foreach(seam => seam.foreach { case (col, row) => overlaid.rgb(col, row, Color.RED) })
+    overlaid
   }
 }

@@ -8,9 +8,6 @@ class SeamCarver private(var width: Int, var height: Int) {
 
   private val pixels = Array.ofDim[Int](width, height)
 
-  type Pos = (Int, Int)
-  type Seam = Seq[Pos]
-
   def this(pic: Picture) {
     this(pic.width, pic.height)
 
@@ -207,5 +204,9 @@ class SeamCarver private(var width: Int, var height: Int) {
 
 object SeamCarver {
   val BorderEnergy = 1000
+
+  type Pos = (Int, Int)
+  type Seam = Seq[Pos]
+
   def apply(pic: Picture): SeamCarver = new SeamCarver(pic)
 }
