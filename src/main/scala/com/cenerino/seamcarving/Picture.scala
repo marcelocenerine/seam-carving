@@ -1,6 +1,6 @@
 package com.cenerino.seamcarving
 
-import java.awt.FlowLayout
+import java.awt.{Color, FlowLayout}
 import java.awt.image.BufferedImage
 import java.io.File
 import java.net.URL
@@ -39,6 +39,8 @@ class Picture private(private val image: BufferedImage) {
     assertIndexesAreWithinBounds(x, y)
     image.getRGB(x, y)
   }
+
+  def rgb(x: Int, y: Int, color: Color): Unit = rgb(x, y, color.getRGB)
 
   private def assertIndexesAreWithinBounds(x: Int, y: Int): Unit = {
     if (x < 0 || x >= width) throw new IndexOutOfBoundsException("Invalid x index")
