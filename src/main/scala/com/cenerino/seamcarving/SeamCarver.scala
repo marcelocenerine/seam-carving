@@ -8,7 +8,7 @@ import SeamCarver._
 
 class SeamCarver private(var width: Int, var height: Int) {
 
-  private val pixels = Array.ofDim[Int](width, height)
+  private var pixels = Array.ofDim[Int](width, height)
 
   def this(pic: Picture) {
     this(pic.width, pic.height)
@@ -83,56 +83,6 @@ class SeamCarver private(var width: Int, var height: Int) {
   private def drawSeam(picture: Picture, seam: Seam): Unit =
     seam.foreach { case (col, row) => picture.rgb(col, row, Color.RED.getRGB) }
 
-  def findHorizontalSeam: Seam = {
-    val distTo = Array.fill(width, height)(Double.PositiveInfinity)
-    val edgeTo = Array.ofDim[Pos](width, height)
-    val visited = Array.ofDim[Boolean](width, height)
-    val queue = mutable.Queue[Pos]()
-
-    // populates first column
-    for (r <- 0 until height; c = 0) {
-      distTo(c)(r) = energy(c, r)
-      queue += ((c, r))
-    }
-
-    while (queue.nonEmpty) {
-      val (col, row) = queue.dequeue
-      // relax
-      val dist = distTo(col)(row)
-      val e = energy(col, row)
-
-      for ((adjCol, adjRow) <- horizontallyAdjacentPixels(col, row)) {
-        if (e + dist < distTo(adjCol)(adjRow)) {
-          distTo(adjCol)(adjRow) = e + dist
-          edgeTo(adjCol)(adjRow) = (col, row)
-        }
-
-        if (!visited(adjCol)(adjRow)) {
-          queue += ((adjCol, adjRow))
-          visited(adjCol)(adjRow) = true
-        }
-      }
-    }
-
-    val lastColInSeam = width - 1
-    val lastRowInSeam = (0 until height).map(r => (r, distTo(lastColInSeam)(r))).reduceLeft((a, b) => if (b._2 > a._2) b else a)._1
-    lazy val seam: Stream[Pos] = Stream.cons((lastColInSeam, lastRowInSeam), seam.map { case (c, r) => edgeTo(c)(r) })
-    (seam take width) reverse
-  }
-
-  private def horizontallyAdjacentPixels(pixel: Pos): Seq[Pos] = {
-    val result = mutable.ListBuffer[Pos]()
-    val (c, r) = pixel
-
-    if (c < width - 1) {
-      result += ((c + 1, r))
-      if (r > 0) result += ((c + 1, r - 1))
-      if (r < height - 1) result += ((c + 1, r + 1))
-    }
-
-    result
-  }
-
   def findVerticalSeam: Seam = {
     val distTo = Array.fill(width, height)(Double.PositiveInfinity)
     val edgeTo = Array.ofDim[Pos](width, height)
@@ -182,6 +132,18 @@ class SeamCarver private(var width: Int, var height: Int) {
 
     result
   }
+
+  def findHorizontalSeam: Seam = {
+    val originalPixels = pixels
+    pixels = pixels.transpose
+    swapDimensions
+    val seam = findVerticalSeam.map(_.swap)
+    pixels = originalPixels
+    swapDimensions
+    seam
+  }
+
+  private def swapDimensions = { val temp = width; width = height; height = temp }
 
   def removeSeam(seam: Seam): Unit = {
     seam.foreach { assertIsWithinBounds(_) }
