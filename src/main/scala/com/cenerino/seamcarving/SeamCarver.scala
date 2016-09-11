@@ -1,6 +1,7 @@
 package com.cenerino.seamcarving
 
 import java.awt.Color
+import java.awt.Color.RED
 
 import scala.collection.mutable
 import scala.math._
@@ -32,29 +33,28 @@ class SeamCarver private(var width: Int, var height: Int) {
 
   def energyPicture(showVerticalSeam: Boolean = false, showHorizontalSeam: Boolean = false): Picture = {
     val picture = Picture(width, height)
-    val grayValues = energyMatrix
+    val energyMatrix = (0 until width).map(c => (0 until height).map(r => energy(c, r)).toArray).toArray
 
     // maximum gray scale value (ignoring border pixels)
-    val maxVal = (for {col <- 1 until width - 1; row <- 1 until height - 1} yield grayValues(col)(row)).max
+    val maxVal = (for (col <- 1 until width - 1; row <- 1 until height - 1) yield energyMatrix(col)(row)).max
 
     if (maxVal != 0) {
       for {
         col <- 0 until width
         row <- 0 until height
       } {
-        val normalized = min((grayValues(col)(row) / maxVal).toFloat, 1.0f)
+        val normalized = min((energyMatrix(col)(row) / maxVal).toFloat, 1.0f)
         picture.rgb(col, row, new Color(normalized, normalized, normalized).getRGB)
       }
     }
 
-    if (showVerticalSeam) drawSeam(picture, findVerticalSeam)
-    if (showHorizontalSeam) drawSeam(picture, findHorizontalSeam)
+    val drawSeam = (seam: Seam) => seam.foreach { case (c, r) => picture.rgb(c, r, RED.getRGB) }
+
+    if (showVerticalSeam) drawSeam(findVerticalSeam)
+    if (showHorizontalSeam) drawSeam(findHorizontalSeam)
 
     picture
   }
-
-  private def energyMatrix: Array[Array[Double]] =
-    (0 until width).map(col => (0 until height).map(row => energy(col, row)).toArray).toArray
 
   private def energy(pixel: Pos): Double = {
     val (c, r) = pixel
@@ -79,9 +79,6 @@ class SeamCarver private(var width: Int, var height: Int) {
   private def green(rgb: Int): Int = (rgb >> 8) & 0xFF
 
   private def blue(rgb: Int): Int = (rgb >> 0) & 0xFF
-
-  private def drawSeam(picture: Picture, seam: Seam): Unit =
-    seam.foreach { case (col, row) => picture.rgb(col, row, Color.RED.getRGB) }
 
   def findVerticalSeam: Seam = {
     val distTo = Array.fill(width, height)(Double.PositiveInfinity)
