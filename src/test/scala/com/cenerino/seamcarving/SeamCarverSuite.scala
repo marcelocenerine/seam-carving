@@ -4,6 +4,7 @@ import org.scalatest.FunSuite
 
 class SeamCarverSuite extends FunSuite {
 
+  // TODO add finer grained unit tests
   test("should resize both horizontally and vertically") {
     val input = Image("/chameleon.png")
     var output = input

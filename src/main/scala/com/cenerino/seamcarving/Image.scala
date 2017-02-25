@@ -1,5 +1,7 @@
 package com.cenerino.seamcarving
 
+import java.awt.image.BufferedImage
+import java.awt.image.BufferedImage.TYPE_INT_RGB
 import java.io.File
 import javax.imageio.ImageIO
 
@@ -41,4 +43,15 @@ object Image {
   }
 
   def apply(pixels: Array[Array[Int]]): Image = new Image(pixels) // TODO safe copy
+
+  implicit def image2BufferedImage(image: Image): BufferedImage = {
+    val bufferedImage = new BufferedImage(image.width, image.height, TYPE_INT_RGB)
+
+    for {
+      col <- 0 until image.width
+      row <- 0 until image.height
+    } bufferedImage.setRGB(col, row, image.rgb(col, row))
+
+    bufferedImage
+  }
 }

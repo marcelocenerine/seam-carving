@@ -5,13 +5,13 @@ import java.awt.image.BufferedImage
 import javax.swing.{ImageIcon, JFrame, JLabel}
 
 import com.cenerino.seamcarving.Image
+import com.cenerino.seamcarving.Image.image2BufferedImage
 
-class Frame(val title: String, val image: Image) {
+class Frame(title: String = "", image: Image) {
+
+  val bufferedImage: BufferedImage = image
 
   def show(): Unit = {
-    val bufferedImage = new BufferedImage(image.width, image.height, BufferedImage.TYPE_INT_RGB)
-    for (c <- 0 until image.width; r <- 0 until image.height) bufferedImage.setRGB(c, r, image.rgb(c, r))
-
     val frame = new JFrame()
     frame.setTitle(title)
     frame.add(new JLabel(new ImageIcon(bufferedImage)))
@@ -21,3 +21,9 @@ class Frame(val title: String, val image: Image) {
     frame.setVisible(true)
   }
 }
+
+
+//val drawSeam = (seam: Seam) => seam.foreach { case (c, r) => pixels(c)(r) = RED.getRGB }
+//
+//if (showVerticalSeam) drawSeam(nextVerticalSeam(image))
+//if (showHorizontalSeam) drawSeam(nextHorizontalSeam(image))

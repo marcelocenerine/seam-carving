@@ -1,8 +1,12 @@
 package com.cenerino.seamcarving
 
+import java.awt.Color
+
 import scala.math._
 
-trait EnergyFunction extends (Pos => Double)
+trait EnergyFunction extends (Pos => Double) {
+  def transformed: Image
+}
 
 object EnergyFunction {
   def dualGradient(image: Image): EnergyFunction = new DualGradient(image)
@@ -38,5 +42,23 @@ private class DualGradient(val image: Image) extends EnergyFunction {
     val g = green(rgb1) - green(rgb2)
     val b = blue(rgb1) - blue(rgb2)
     pow(r, 2) + pow(g, 2) + pow(b, 2)
+  }
+
+  def transformed: Image = {
+    val (width, height) = (image.width, image.height)
+    val pixels = Array.ofDim[Int](width, height)
+    val energyMatrix = Array.tabulate[Double](width, height)(this(_, _))
+
+    // maximum gray scale value (ignoring border pixels)
+    val maxVal = (for (col <- 1 until (width - 1); row <- 1 until (height - 1)) yield energyMatrix(col)(row)).max
+
+    if (maxVal != 0) {
+      for (col <- 0 until width; row <- 0 until height) {
+        val normalized = min((energyMatrix(col)(row) / maxVal).toFloat, 1.0f)
+        pixels(col)(row) = new Color(normalized, normalized, normalized).getRGB
+      }
+    }
+
+    Image(pixels)
   }
 }

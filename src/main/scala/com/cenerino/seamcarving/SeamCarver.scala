@@ -1,36 +1,10 @@
 package com.cenerino.seamcarving
 
-import java.awt.Color
-import java.awt.Color._
-
 import scala.collection.mutable
 import scala.math._
 
+// TODO refactoring in progress....
 object SeamCarver {
-
-  // TODO move it somewhere else
-  def energyPicture(image: Image, showVerticalSeam: Boolean = false, showHorizontalSeam: Boolean = false): Image = {
-    val pixels = Array.ofDim[Int](image.width, image.height)
-    val energy = EnergyFunction.dualGradient(image)
-    val energyMatrix = (0 until image.width).map(c => (0 until image.height).map(r => energy(c, r)).toArray).toArray
-
-    // maximum gray scale value (ignoring border pixels)
-    val maxVal = (for (col <- 1 until image.width - 1; row <- 1 until image.height - 1) yield energyMatrix(col)(row)).max
-
-    if (maxVal != 0) {
-      for {col <- 0 until image.width; row <- 0 until image.height} {
-        val normalized = min((energyMatrix(col)(row) / maxVal).toFloat, 1.0f)
-        pixels(col)(row) = new Color(normalized, normalized, normalized).getRGB
-      }
-    }
-
-    val drawSeam = (seam: Seam) => seam.foreach { case (c, r) => pixels(c)(r) = RED.getRGB }
-
-    if (showVerticalSeam) drawSeam(nextVerticalSeam(image))
-    if (showHorizontalSeam) drawSeam(nextHorizontalSeam(image))
-
-    Image(pixels)
-  }
 
   def nextVerticalSeam(image: Image): Seam = {
     val width = image.width
@@ -126,11 +100,11 @@ object SeamCarver {
   private def validateSeam(seam: Seam, image: Image): Unit = {
     def assertPixelsAreWithinBounds(pixel: Pos) = {
       val (col, row) = pixel
-      if (col < 0 || col >= image.width || row < 0 || row >= image.height) 
+      if (col < 0 || col >= image.width || row < 0 || row >= image.height)
         throw new IndexOutOfBoundsException("invalid index")
     }
 
-    def areElementsInSeamAdjacentToEachOther = {
+    def allEntriesAdjacentToEachOther = {
       def isAdjacent(predecessor: Pos, current: Pos) = {
         val (preCol, preRow) = predecessor
         val (curCol, curRow) = current
@@ -141,6 +115,6 @@ object SeamCarver {
     }
 
     seam foreach assertPixelsAreWithinBounds
-    require(areElementsInSeamAdjacentToEachOther, "One or more adjacent entries differ by more than 1 pixel")
+    require(allEntriesAdjacentToEachOther, "One or more adjacent entries differ by more than 1 pixel")
   }
 }
