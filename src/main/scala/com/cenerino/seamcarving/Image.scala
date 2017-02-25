@@ -1,12 +1,9 @@
 package com.cenerino.seamcarving
 
-import java.awt.FlowLayout
-import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
-import javax.swing.{JFrame, ImageIcon, JLabel}
 
-class Image(private val pixels: Array[Array[Int]]) {
+class Image(private[this] val pixels: Array[Array[Int]]) {
 
   def width: Int = pixels.length
 
@@ -20,7 +17,7 @@ class Image(private val pixels: Array[Array[Int]]) {
 
     pixels(col)(row)
   }
-  
+
   def transpose: Image = new Image(pixels transpose)
 
   override def equals(that: Any): Boolean = that match {
@@ -31,23 +28,6 @@ class Image(private val pixels: Array[Array[Int]]) {
         allPos.forall(pos => image.rgb(pos) == this.rgb(pos))
       }
     case _ => false
-  }
-
-  // TODO move somewhere else
-  def display(title: String = ""): Unit = {
-    val image = new BufferedImage(width, height, 1)
-    for { c <- 0 until width; r <- 0 until height } image.setRGB(c, r, pixels(c)(r))
-
-
-    val label = new JLabel()
-    label.setIcon(new ImageIcon(image))
-    val frame = new JFrame()
-    frame.setTitle(title)
-    frame.add(label)
-    frame.setLayout(new FlowLayout())
-    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
-    frame.pack()
-    frame.setVisible(true)
   }
 }
 

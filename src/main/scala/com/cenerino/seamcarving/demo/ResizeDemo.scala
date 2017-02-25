@@ -30,6 +30,6 @@ object ResizeDemo extends App {
   println(s"Output image is ${output.width} columns by ${output.height} rows")
   println(s"Total time: ${System.currentTimeMillis() - start}")
 
-  input display (title = s"Input ${input.width} x ${input.height}")
-  output display (title = s"Output ${output.width} x ${output.height}")
+  new Frame(title = s"Input ${input.width} x ${input.height}", image = input).show()
+  new Frame(title = s"Output ${output.width} x ${output.height}", image = output).show()
 }
