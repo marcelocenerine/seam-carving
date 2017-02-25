@@ -56,7 +56,7 @@ class SeamCarver private(var width: Int, var height: Int) {
     picture
   }
 
-  private def energy(pixel: Pos): Double = {
+  def energy(pixel: Pos): Double = {
     val (c, r) = pixel
 
     if (c == 0 || c == width - 1 || r == 0 || r == height - 1) BorderEnergy
@@ -142,28 +142,18 @@ class SeamCarver private(var width: Int, var height: Int) {
 
   private def swapDimensions = { val temp = width; width = height; height = temp }
 
-  def removeSeam(seam: Seam): Unit = {
-    seam.foreach { assertIsWithinBounds(_) }
-    assertPixelsAreAdjacent(seam)
-
-    if (seam.length == width) removeHorizontalSeam(seam)
-    else if (seam.length == height) removeVerticalSeam(seam)
-    else throw new IllegalArgumentException("Invalid seam length")
-  }
-
-  private def removeHorizontalSeam(seam: Seam): Unit = {
+  def removeHorizontalSeam(seam: Seam): Unit = {
     require(height > 1, "Image cannot be horizontally resized")
-
-    for {
-      (col, row) <- seam
-      r <- row until (height - 1)
-    } pixels(col)(r) = pixels(col)(r + 1)
-
+    require(seam.length == width, "Seam length does not match image width")
+    validateSeam(seam)
+    seam.foreach { case (c, r) => Array.copy(pixels(c), r + 1, pixels(c), r, (height - r - 1)) }
     height -= 1
   }
 
-  private def removeVerticalSeam(seam: Seam): Unit = {
+  def removeVerticalSeam(seam: Seam): Unit = {
     require(width > 1, "Image cannot be vertically resized")
+    require(seam.length == height, "Seam length does not match image height")
+    validateSeam(seam)
 
     for {
       (col, row) <- seam
@@ -173,15 +163,20 @@ class SeamCarver private(var width: Int, var height: Int) {
     width -= 1
   }
 
+  private def validateSeam(seam: Seam): Unit = {
+    seam.foreach { assertPixelsAreWithinBounds(_) }
+    assertPixelsAreAdjacent(seam)
+  }
+
+  private def assertPixelsAreWithinBounds(pixel: Pos): Unit = {
+    val (c, r) = pixel
+    if (c < 0 || c >= width || r < 0 || r >= height) throw new IndexOutOfBoundsException("invalid index")
+  }
+
   private def assertPixelsAreAdjacent(seam: Seam): Unit = {
     require(((seam) zip (seam tail))
         .forall { case (pre, current) => isValidAdjacency(pre, current) },
       "One or more adjacent entries differ by more than 1 pixel")
-  }
-
-  private def assertIsWithinBounds(pixel: Pos): Unit = {
-    val (c, r) = pixel
-    if (c < 0 || c >= width || r < 0 || r >= height) throw new IndexOutOfBoundsException("invalid index")
   }
 
   private def isValidAdjacency(predecessor: Pos, current: Pos): Boolean = {
