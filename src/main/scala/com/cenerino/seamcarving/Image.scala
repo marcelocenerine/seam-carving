@@ -23,6 +23,16 @@ class Image(private val pixels: Array[Array[Int]]) {
   
   def transpose: Image = new Image(pixels transpose)
 
+  override def equals(that: Any): Boolean = that match {
+    case image: Image =>
+      if (image.width != this.width || image.height != this.height) false
+      else {
+        val allPos = for (c <- 0 until width; r <- 0 until height) yield (c, r)
+        allPos.forall(pos => image.rgb(pos) == this.rgb(pos))
+      }
+    case _ => false
+  }
+
   // TODO move somewhere else
   def display(title: String = ""): Unit = {
     val image = new BufferedImage(width, height, 1)
