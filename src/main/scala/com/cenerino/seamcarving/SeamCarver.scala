@@ -1,86 +1,42 @@
 package com.cenerino.seamcarving
 
 import java.awt.Color
-import java.awt.Color.RED
+import java.awt.Color._
 
 import scala.collection.mutable
 import scala.math._
-import SeamCarver._
 
-class SeamCarver private(var width: Int, var height: Int) {
+object SeamCarver {
 
-  private var pixels = Array.ofDim[Int](width, height)
-
-  def this(pic: Picture) {
-    this(pic.width, pic.height)
-
-    for {
-      c <- 0 until width
-      r <- 0 until height
-    } pixels(c)(r) = pic.rgb(c, r)
-  }
-
-  def picture: Picture = {
-    val pic = Picture(width, height)
-
-    for {
-      c <- 0 until width
-      r <- 0 until height
-    } pic.rgb(c, r, pixels(c)(r))
-
-    pic
-  }
-
-  def energyPicture(showVerticalSeam: Boolean = false, showHorizontalSeam: Boolean = false): Picture = {
-    val picture = Picture(width, height)
-    val energyMatrix = (0 until width).map(c => (0 until height).map(r => energy(c, r)).toArray).toArray
+  // TODO move it somewhere else
+  def energyPicture(image: Image, showVerticalSeam: Boolean = false, showHorizontalSeam: Boolean = false): Image = {
+    val pixels = Array.ofDim[Int](image.width, image.height)
+    val energy = EnergyFunction.dualGradient(image)
+    val energyMatrix = (0 until image.width).map(c => (0 until image.height).map(r => energy(c, r)).toArray).toArray
 
     // maximum gray scale value (ignoring border pixels)
-    val maxVal = (for (col <- 1 until width - 1; row <- 1 until height - 1) yield energyMatrix(col)(row)).max
+    val maxVal = (for (col <- 1 until image.width - 1; row <- 1 until image.height - 1) yield energyMatrix(col)(row)).max
 
     if (maxVal != 0) {
-      for {
-        col <- 0 until width
-        row <- 0 until height
-      } {
+      for {col <- 0 until image.width; row <- 0 until image.height} {
         val normalized = min((energyMatrix(col)(row) / maxVal).toFloat, 1.0f)
-        picture.rgb(col, row, new Color(normalized, normalized, normalized).getRGB)
+        pixels(col)(row) = new Color(normalized, normalized, normalized).getRGB
       }
     }
 
-    val drawSeam = (seam: Seam) => seam.foreach { case (c, r) => picture.rgb(c, r, RED.getRGB) }
+    val drawSeam = (seam: Seam) => seam.foreach { case (c, r) => pixels(c)(r) = RED.getRGB }
 
-    if (showVerticalSeam) drawSeam(findVerticalSeam)
-    if (showHorizontalSeam) drawSeam(findHorizontalSeam)
+    if (showVerticalSeam) drawSeam(nextVerticalSeam(image))
+    if (showHorizontalSeam) drawSeam(nextHorizontalSeam(image))
 
-    picture
+    Image(pixels)
   }
 
-  def energy(pixel: Pos): Double = {
-    val (c, r) = pixel
+  def nextVerticalSeam(image: Image): Seam = {
+    val width = image.width
+    val height = image.height
+    val energy = EnergyFunction.dualGradient(image)
 
-    if (c == 0 || c == width - 1 || r == 0 || r == height - 1) BorderEnergy
-    else {
-      val deltaX = delta(pixels(c - 1)(r), pixels(c + 1)(r))
-      val deltaY = delta(pixels(c)(r - 1), pixels(c)(r + 1))
-      sqrt(deltaX + deltaY)
-    }
-  }
-
-  private def delta(rgb1: Int, rgb2: Int): Double = {
-    val r = red(rgb1) - red(rgb2)
-    val g = green(rgb1) - green(rgb2)
-    val b = blue(rgb1) - blue(rgb2)
-    pow(r, 2) + pow(g, 2) + pow(b, 2)
-  }
-
-  private def red(rgb: Int): Int = (rgb >> 16) & 0xFF
-
-  private def green(rgb: Int): Int = (rgb >> 8) & 0xFF
-
-  private def blue(rgb: Int): Int = (rgb >> 0) & 0xFF
-
-  def findVerticalSeam: Seam = {
     val distTo = Array.fill(width, height)(Double.PositiveInfinity)
     val edgeTo = Array.ofDim[Pos](width, height)
     val visited = Array.ofDim[Boolean](width, height)
@@ -93,15 +49,16 @@ class SeamCarver private(var width: Int, var height: Int) {
     }
 
     while (queue.nonEmpty) {
-      val (col, row) = queue.dequeue
+      val pos = queue.dequeue
+      val (col, row) = pos
       // relax
       val dist = distTo(col)(row)
       val e = energy(col, row)
 
-      for ((adjCol, adjRow) <- verticallyAdjacentPixels(col, row)) {
+      for ((adjCol, adjRow) <- verticallyAdjacentPixels(pos, image)) {
         if (e + dist < distTo(adjCol)(adjRow)) {
           distTo(adjCol)(adjRow) = e + dist
-          edgeTo(adjCol)(adjRow) = (col, row)
+          edgeTo(adjCol)(adjRow) = pos
         }
 
         if (!visited(adjCol)(adjRow)) {
@@ -117,80 +74,73 @@ class SeamCarver private(var width: Int, var height: Int) {
     (seam take height) reverse
   }
 
-  private def verticallyAdjacentPixels(pixel: Pos): Seq[Pos] = {
+  private def verticallyAdjacentPixels(pos: Pos, image: Image): Seq[Pos] = {
     val result = mutable.ListBuffer[Pos]()
-    val (c, r) = pixel
+    val (c, r) = pos
 
-    if (r < height - 1) {
+    if (r < image.height - 1) {
       result += ((c, r + 1))
       if (c > 0) result += ((c - 1, r + 1))
-      if (c < width - 1) result += ((c + 1, r + 1))
+      if (c < image.width - 1) result += ((c + 1, r + 1))
     }
 
     result
   }
 
-  def findHorizontalSeam: Seam = {
-    val originalPixels = pixels
-    pixels = pixels.transpose
-    swapDimensions
-    val seam = findVerticalSeam.map(_.swap)
-    pixels = originalPixels
-    swapDimensions
-    seam
-  }
+  def nextHorizontalSeam(image: Image): Seam = nextVerticalSeam(image transpose) map (_.swap)
 
-  private def swapDimensions = { val temp = width; width = height; height = temp }
+  def removeVerticalSeam(seam: Seam, image: Image): Image = {
+    require(image.width > 1, "Image cannot be vertically resized")
+    require(seam.length == image.height, "Seam length does not match image height")
+    validateSeam(seam, image)
 
-  def removeHorizontalSeam(seam: Seam): Unit = {
-    require(height > 1, "Image cannot be horizontally resized")
-    require(seam.length == width, "Seam length does not match image width")
-    validateSeam(seam)
-    seam.foreach { case (c, r) => Array.copy(pixels(c), r + 1, pixels(c), r, (height - r - 1)) }
-    height -= 1
-  }
-
-  def removeVerticalSeam(seam: Seam): Unit = {
-    require(width > 1, "Image cannot be vertically resized")
-    require(seam.length == height, "Seam length does not match image height")
-    validateSeam(seam)
+    val newWidth = image.width - 1
+    val pixels = Array.ofDim[Int](newWidth, image.height)
 
     for {
       (col, row) <- seam
-      c <- col until (width - 1)
-    } pixels(c)(row) = pixels(c + 1)(row)
+      targetCol <- 0 until newWidth
+      sourceCol = if (targetCol < col) targetCol else targetCol + 1
+    } pixels(targetCol)(row) = image.rgb(sourceCol, row)
 
-    width -= 1
+    Image(pixels)
   }
 
-  private def validateSeam(seam: Seam): Unit = {
-    seam.foreach { assertPixelsAreWithinBounds(_) }
-    assertPixelsAreAdjacent(seam)
+  def removeHorizontalSeam(seam: Seam, image: Image): Image = {
+    require(image.height > 1, "Image cannot be horizontally resized")
+    require(seam.length == image.width, "Seam length does not match image width")
+    validateSeam(seam, image)
+
+    val newHeight = image.height - 1
+    val pixels = Array.ofDim[Int](image.width, newHeight)
+
+    for {
+      (col, row) <- seam
+      targetRow <- 0 until newHeight
+      sourceRow = if (targetRow < row) targetRow else targetRow + 1
+    } pixels(col)(targetRow) = image.rgb(col, sourceRow)
+
+    Image(pixels)
   }
 
-  private def assertPixelsAreWithinBounds(pixel: Pos): Unit = {
-    val (c, r) = pixel
-    if (c < 0 || c >= width || r < 0 || r >= height) throw new IndexOutOfBoundsException("invalid index")
+  private def validateSeam(seam: Seam, image: Image): Unit = {
+    def assertPixelsAreWithinBounds(pixel: Pos) = {
+      val (col, row) = pixel
+      if (col < 0 || col >= image.width || row < 0 || row >= image.height) 
+        throw new IndexOutOfBoundsException("invalid index")
+    }
+
+    def areElementsInSeamAdjacentToEachOther = {
+      def isAdjacent(predecessor: Pos, current: Pos) = {
+        val (preCol, preRow) = predecessor
+        val (curCol, curRow) = current
+        abs(curCol - preCol) <= 1 && abs(curRow - preRow) <= 1
+      }
+
+      (seam zip (seam tail)) forall { case (pre, current) => isAdjacent(pre, current) }
+    }
+
+    seam foreach assertPixelsAreWithinBounds
+    require(areElementsInSeamAdjacentToEachOther, "One or more adjacent entries differ by more than 1 pixel")
   }
-
-  private def assertPixelsAreAdjacent(seam: Seam): Unit = {
-    require(((seam) zip (seam tail))
-        .forall { case (pre, current) => isValidAdjacency(pre, current) },
-      "One or more adjacent entries differ by more than 1 pixel")
-  }
-
-  private def isValidAdjacency(predecessor: Pos, current: Pos): Boolean = {
-    val (preCol, preRow) = predecessor
-    val (curCol, curRow) = current
-    abs(curCol - preCol) <= 1 && abs(curRow - preRow) <= 1
-  }
-}
-
-object SeamCarver {
-  val BorderEnergy = 1000
-
-  type Pos = (Int, Int)
-  type Seam = Seq[Pos]
-
-  def apply(pic: Picture): SeamCarver = new SeamCarver(pic)
 }
