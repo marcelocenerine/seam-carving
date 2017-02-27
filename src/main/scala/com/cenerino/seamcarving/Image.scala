@@ -5,13 +5,13 @@ import java.awt.image.BufferedImage.TYPE_INT_RGB
 import java.io.File
 import javax.imageio.ImageIO
 
-class Image(private[this] val pixels: Array[Array[Int]]) {
+class Image(private[this] val pixels: Array[Array[RGB]]) {
 
   def width: Int = pixels.length
 
   def height: Int = if (width > 0) pixels.head.length else 0
 
-  def rgb(pos: Pos): Int = {
+  def rgb(pos: Pos): RGB = {
     val (col, row) = pos
 
     require(col >= 0 && col < width)
@@ -42,7 +42,7 @@ object Image {
     new Image(pixels)
   }
 
-  def apply(pixels: Array[Array[Int]]): Image = new Image(pixels) // TODO safe copy
+  def apply(pixels: Array[Array[RGB]]): Image = new Image(pixels) // TODO safe copy
 
   implicit def image2BufferedImage(image: Image): BufferedImage = {
     val bufferedImage = new BufferedImage(image.width, image.height, TYPE_INT_RGB)
