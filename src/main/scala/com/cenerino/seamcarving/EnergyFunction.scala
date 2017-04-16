@@ -3,7 +3,7 @@ package com.cenerino.seamcarving
 import scala.math._
 
 sealed trait EnergyFunction extends (Pos => Double) {
-  def transformed: Image
+  def energyPicture: Image
 }
 
 object EnergyFunction {
@@ -15,15 +15,13 @@ private class DualGradient(private val image: Image) extends EnergyFunction {
   private val BorderEnergy = 1000.0
 
   def apply(pos: Pos): Double = {
+    require(image.isDefinedAt(pos), "invalid coordinates")
     val (col, row) = pos
-
-    require(col >= 0 && col < image.width)
-    require(row >= 0 && row < image.height)
 
     if (isAtBorder(col, row, image)) BorderEnergy
     else {
-      val deltaX = delta(image.rgb(col - 1, row), image.rgb(col + 1, row))
-      val deltaY = delta(image.rgb(col, row - 1), image.rgb(col, row + 1))
+      val deltaX = delta(image(col - 1, row), image(col + 1, row))
+      val deltaY = delta(image(col, row - 1), image(col, row + 1))
       sqrt(deltaX + deltaY)
     }
   }
@@ -38,9 +36,9 @@ private class DualGradient(private val image: Image) extends EnergyFunction {
     pow(r, 2) + pow(g, 2) + pow(b, 2)
   }
 
-  def transformed: Image = {
+  def energyPicture: Image = {
     val (width, height) = (image.width, image.height)
-    val pixels = Array.ofDim[RGB](width, height)
+    val output = Image.blank(width, height, Black)
     val energyMatrix = Array.tabulate[Double](width, height)(this(_, _))
 
     // maximum gray scale value (ignoring border pixels)
@@ -49,10 +47,10 @@ private class DualGradient(private val image: Image) extends EnergyFunction {
     if (maxVal != 0) {
       for (col <- 0 until width; row <- 0 until height) {
         val normalized = min((energyMatrix(col)(row) / maxVal).toFloat, 1.0f)
-        pixels(col)(row) = rgb(normalized, normalized, normalized)
+        output((col, row)) = rgb(normalized, normalized, normalized)
       }
     }
 
-    Image(pixels)
+    output
   }
 }

@@ -11,7 +11,7 @@ object ShowSeams extends App {
 //  val showHorizontalSeam = "true" == args(2)
 //  val output = SeamCarver.energyPicture(input, showVerticalSeam, showHorizontalSeam)
   val energyFunction = EnergyFunction.dualGradient(input)
-  val output = energyFunction.transformed
+  val output = energyFunction.energyPicture
 
   new Frame(title = "Input", image = input).show()
   new Frame(title = "Output", image = output).show()

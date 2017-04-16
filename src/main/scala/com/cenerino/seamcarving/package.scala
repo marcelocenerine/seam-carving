@@ -16,4 +16,8 @@ package object seamcarving {
     def convert(v: Float) = (v * 255 + 0.5).toInt
     rgb(convert(r), convert(g), convert(b))
   }
+
+  val Black: RGB = rgb(0, 0, 0)
+  val Red: RGB = rgb(255, 0, 0)
+  val White: RGB = rgb(255, 255, 255)
 }

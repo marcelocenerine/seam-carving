@@ -42,8 +42,11 @@ object SeamCarver {
       }
     }
 
+    // find min seam
     val lastRowInSeam = height - 1
-    val lastColInSeam = (0 until width).map(c => (c, distTo(c)(lastRowInSeam))).reduceLeft((a, b) => if (b._2 > a._2) a else b)._1
+    val distancesAtLastRow = for (col <- 0 until width; dist = distTo(col)(lastRowInSeam)) yield (col, dist)
+    val (lastColInSeam, _) = distancesAtLastRow minBy (_._2)
+    // walks backwards until reaching the start of path
     lazy val seam: Stream[Pos] = Stream.cons((lastColInSeam, lastRowInSeam), seam.map { case (c, r) => edgeTo(c)(r) })
     (seam take height) reverse
   }
@@ -69,15 +72,15 @@ object SeamCarver {
     validateSeam(seam, image)
 
     val newWidth = image.width - 1
-    val pixels = Array.ofDim[Int](newWidth, image.height)
+    val output = Image.blank(newWidth, image.height)
 
     for {
       (col, row) <- seam
       targetCol <- 0 until newWidth
       sourceCol = if (targetCol < col) targetCol else targetCol + 1
-    } pixels(targetCol)(row) = image.rgb(sourceCol, row)
+    } output((targetCol, row)) = image((sourceCol, row))
 
-    Image(pixels)
+    output
   }
 
   def removeHorizontalSeam(seam: Seam, image: Image): Image = {
@@ -86,24 +89,18 @@ object SeamCarver {
     validateSeam(seam, image)
 
     val newHeight = image.height - 1
-    val pixels = Array.ofDim[Int](image.width, newHeight)
+    val output: Image = Image.blank(image.width, newHeight)
 
     for {
       (col, row) <- seam
       targetRow <- 0 until newHeight
       sourceRow = if (targetRow < row) targetRow else targetRow + 1
-    } pixels(col)(targetRow) = image.rgb(col, sourceRow)
+    } output((col, targetRow)) = image((col, sourceRow))
 
-    Image(pixels)
+    output
   }
 
   private def validateSeam(seam: Seam, image: Image): Unit = {
-    def assertPixelsAreWithinBounds(pixel: Pos) = {
-      val (col, row) = pixel
-      if (col < 0 || col >= image.width || row < 0 || row >= image.height)
-        throw new IndexOutOfBoundsException("invalid index")
-    }
-
     def allEntriesAdjacentToEachOther = {
       def isAdjacent(predecessor: Pos, current: Pos) = {
         val (preCol, preRow) = predecessor
@@ -114,7 +111,7 @@ object SeamCarver {
       (seam zip (seam tail)) forall { case (pre, current) => isAdjacent(pre, current) }
     }
 
-    seam foreach assertPixelsAreWithinBounds
+    require(seam forall(image.isDefinedAt(_)), "Seam contains invalid coordinates")
     require(allEntriesAdjacentToEachOther, "One or more adjacent entries differ by more than 1 pixel")
   }
 }

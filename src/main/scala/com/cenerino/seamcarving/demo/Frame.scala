@@ -7,7 +7,7 @@ import javax.swing.{ImageIcon, JFrame, JLabel}
 import com.cenerino.seamcarving.Image
 import com.cenerino.seamcarving.Image.image2BufferedImage
 
-class Frame(title: String = "", image: Image) {
+class Frame(image: Image, title: String = "") {
 
   val bufferedImage: BufferedImage = image
 
