@@ -151,7 +151,7 @@ class ImageSuite extends FunSuite {
 
   test("should remove horizontal seam") {
     val input = Image(pixels3x3)
-    val seam = Seam.from(Seq((0, 0), (1, 1), (2, 1)))
+    val seam = HorizontalSeam(Seq((0, 0), (1, 1), (2, 1)))
     val output = input removed seam
 
     assert(output.width === 3)
@@ -164,9 +164,24 @@ class ImageSuite extends FunSuite {
     assert(output(2, 1) === Grey)
   }
 
+  test("should horizontally remove traversal seam") {
+    val input = Image(pixels3x3)
+    val seam = HorizontalSeam(Seq((0, 0), (1, 1), (2, 2)))
+    val output = input removed seam
+
+    assert(output.width === 3)
+    assert(output.height === 2)
+    assert(output(0, 0) === Black)
+    assert(output(0, 1) === White)
+    assert(output(1, 0) === Blue)
+    assert(output(1, 1) === Yellow)
+    assert(output(2, 0) === Purple)
+    assert(output(2, 1) === Orange)
+  }
+
   test("should fail to remove horizontal seam if image width == 1") {
     val input = Image(pixels1x1)
-    val seam = Seam.from(Seq((0, 0)))
+    val seam = HorizontalSeam(Seq((0, 0)))
 
     assertThrows[IllegalArgumentException] {
       input removed seam
@@ -175,7 +190,7 @@ class ImageSuite extends FunSuite {
 
   test("should fail to remove horizontal seam if length < image width") {
     val input = Image(pixels2x2)
-    val seam = Seam.from(Seq((0, 0)))
+    val seam = HorizontalSeam(Seq((0, 0)))
 
     assertThrows[IllegalArgumentException] {
       input removed seam
@@ -184,7 +199,7 @@ class ImageSuite extends FunSuite {
 
   test("should fail to remove horizontal seam if length > image width") {
     val input = Image(pixels2x2)
-    val seam = Seam.from(Seq((0, 0), (1, 0), (2, 0)))
+    val seam = HorizontalSeam(Seq((0, 0), (1, 0), (2, 0)))
 
     assertThrows[IllegalArgumentException] {
       input removed seam
@@ -193,7 +208,7 @@ class ImageSuite extends FunSuite {
 
   test("should fail to remove horizontal seam if it contains invalid coordinates") {
     val input = Image(pixels2x2)
-    val seam = Seam.from(Seq((0, 1), (1, 2)))
+    val seam = HorizontalSeam(Seq((0, 1), (1, 2)))
 
     assertThrows[IllegalArgumentException] {
       input removed seam
@@ -202,7 +217,7 @@ class ImageSuite extends FunSuite {
 
   test("should remove vertical seam") {
     val input = Image(pixels3x3)
-    val seam = Seam.from(Seq((1, 0), (0, 1), (1, 2)))
+    val seam = VerticalSeam(Seq((1, 0), (0, 1), (1, 2)))
     val output = input removed seam
 
     assert(output.width === 2)
@@ -215,9 +230,24 @@ class ImageSuite extends FunSuite {
     assert(output(1, 2) === Grey)
   }
 
+  test("should vertically remove traversal seam") {
+    val input = Image(pixels3x3)
+    val seam = VerticalSeam(Seq((0, 0), (1, 1), (2, 2)))
+    val output = input removed seam
+
+    assert(output.width === 2)
+    assert(output.height === 3)
+    assert(output(0, 0) === Blue)
+    assert(output(0, 1) === Black)
+    assert(output(0, 2) === White)
+    assert(output(1, 0) === Purple)
+    assert(output(1, 1) === Orange)
+    assert(output(1, 2) === Yellow)
+  }
+
   test("should fail to remove vertical seam if image height == 1") {
     val input = Image(pixels1x1)
-    val seam = Seam.from(Seq((0, 0)))
+    val seam = VerticalSeam(Seq((0, 0)))
 
     assertThrows[IllegalArgumentException] {
       input removed seam
@@ -226,7 +256,7 @@ class ImageSuite extends FunSuite {
 
   test("should fail to remove vertical seam if length < image height") {
     val input = Image(pixels2x2)
-    val seam = Seam.from(Seq((0, 0)))
+    val seam = VerticalSeam(Seq((0, 0)))
 
     assertThrows[IllegalArgumentException] {
       input removed seam
@@ -235,7 +265,7 @@ class ImageSuite extends FunSuite {
 
   test("should fail to remove vertical seam if length > image height") {
     val input = Image(pixels2x2)
-    val seam = Seam.from(Seq((0, 0), (0, 1), (0, 2)))
+    val seam = VerticalSeam(Seq((0, 0), (0, 1), (0, 2)))
 
     assertThrows[IllegalArgumentException] {
       input removed seam
@@ -244,7 +274,7 @@ class ImageSuite extends FunSuite {
 
   test("should fail to remove vertical seam if it contains invalid coordinates") {
     val input = Image(pixels2x2)
-    val seam = Seam.from(Seq((1, 0), (2, 1)))
+    val seam = VerticalSeam(Seq((1, 0), (2, 1)))
 
     assertThrows[IllegalArgumentException] {
       input removed seam

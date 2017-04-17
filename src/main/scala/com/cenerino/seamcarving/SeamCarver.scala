@@ -2,7 +2,7 @@ package com.cenerino.seamcarving
 
 import scala.collection.mutable
 
-private sealed abstract class SeamCarver {
+private abstract class SeamCarver {
   val image: Image
   val seamLength: Int
   val width = image.width
@@ -13,7 +13,7 @@ private sealed abstract class SeamCarver {
   def endingPixels: Seq[Pos]
   def adjacentPixels(pos: Pos): Seq[Pos]
 
-  def nextSeam: Seam = {
+  def minimumEnergyPath: Seq[Pos] = {
     val distTo = Array.fill(width, height)(Double.PositiveInfinity)
     val edgeTo = Array.ofDim[Pos](width, height)
     val visited = Array.ofDim[Boolean](width, height)
@@ -45,23 +45,22 @@ private sealed abstract class SeamCarver {
       }
     }
 
-    // find min seam
     val (endingColumn, endingRow) = endingPixels minBy { case (c, r) => distTo(c)(r) }
     // walks backwards until reaching the start of path
-    lazy val seam: Stream[Pos] = Stream.cons((endingColumn, endingRow), seam.map { case (c, r) => edgeTo(c)(r) })
-    Seam.from((seam take seamLength) reverse)
+    lazy val path: Stream[Pos] = Stream.cons((endingColumn, endingRow), path.map { case (c, r) => edgeTo(c)(r) })
+    (path take seamLength) reverse
   }
 }
 
 private class HorizontalCarver(val image: Image) extends SeamCarver {
 
-  val seamLength: Int = width
+  val seamLength = width
 
-  override def startingPixels: Seq[Pos] = (0 until height).map(r => (0, r))
+  override def startingPixels = (0 until height) map (r => (0, r))
 
-  override def endingPixels: Seq[Pos] = (0 until height).map(r => (width - 1, r))
+  override def endingPixels = (0 until height) map (r => (width - 1, r))
 
-  override def adjacentPixels(pos: Pos): Seq[Pos] =  {
+  override def adjacentPixels(pos: Pos) =  {
     val result = mutable.ListBuffer[Pos]()
     val (c, r) = pos
 
@@ -73,17 +72,19 @@ private class HorizontalCarver(val image: Image) extends SeamCarver {
 
     result
   }
+
+  def next: Seam = new HorizontalSeam(minimumEnergyPath)
 }
 
 private class VerticalCarver(val image: Image) extends SeamCarver {
 
-  val seamLength: Int = height
+  val seamLength = height
 
-  override def startingPixels: Seq[Pos] = (0 until width).map(c => (c, 0))
+  override def startingPixels = (0 until width) map (c => (c, 0))
 
-  override def endingPixels: Seq[Pos] = (0 until width).map(c => (c, height - 1))
+  override def endingPixels = (0 until width) map (c => (c, height - 1))
 
-  override def adjacentPixels(pos: Pos): Seq[Pos] =  {
+  override def adjacentPixels(pos: Pos) =  {
     val result = mutable.ListBuffer[Pos]()
     val (c, r) = pos
 
@@ -95,9 +96,11 @@ private class VerticalCarver(val image: Image) extends SeamCarver {
 
     result
   }
+
+  def next: Seam = new VerticalSeam(minimumEnergyPath)
 }
 
 object SeamCarver {
-  def nextHorizontalSeam(image: Image) = new HorizontalCarver(image).nextSeam
-  def nextVerticalSeam(image: Image) = new VerticalCarver(image).nextSeam
+  def nextHorizontalSeam(image: Image) = new HorizontalCarver(image).next
+  def nextVerticalSeam(image: Image) = new VerticalCarver(image).next
 }

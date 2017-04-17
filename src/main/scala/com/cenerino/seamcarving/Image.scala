@@ -31,7 +31,10 @@ class Image private(private val pixels: Array[Array[RGB]], val width: Int, val h
   def removed(seam: Seam): Image = {
     require(seam forall isDefinedAt, "Seam contains invalid coordinates")
 
-    if (seam.isVertical) verticalRemoval(seam) else horizontalRemoval(seam)
+    seam match {
+      case _: HorizontalSeam => horizontalRemoval(seam)
+      case _: VerticalSeam => verticalRemoval(seam)
+    }
   }
 
   private def verticalRemoval(seam: Seam): Image = {
