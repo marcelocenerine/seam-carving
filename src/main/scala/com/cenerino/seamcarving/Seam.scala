@@ -14,7 +14,9 @@ class Seam private(private val pixels: IndexedSeq[Pos]) extends Seq[Pos] {
       abs(curCol - preCol) <= 1 && abs(curRow - preRow) <= 1
     }
 
-    (pixels sliding 2).forall { case Seq(predecessor, current) => isAdjacent(predecessor, current) }
+    if (pixels.length > 1)
+      (pixels sliding 2).forall { case Seq(predecessor, current) => isAdjacent(predecessor, current) }
+    else true
   }
 
   require(pixels.length > 0, "Cannot be empty")

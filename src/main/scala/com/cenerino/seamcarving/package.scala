@@ -17,6 +17,12 @@ package object seamcarving {
   }
 
   val Black: RGB = rgb(0, 0, 0)
+  val Blue: RGB = rgb(0, 0, 255)
+  val Green: RGB = rgb(0, 128, 0)
+  val Grey: RGB = rgb(128, 128, 128)
+  val Orange: RGB = rgb(255, 165, 0)
+  val Purple: RGB = rgb(128, 0, 128)
   val Red: RGB = rgb(255, 0, 0)
   val White: RGB = rgb(255, 255, 255)
+  val Yellow: RGB = rgb(255, 255, 0)
 }

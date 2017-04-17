@@ -26,8 +26,10 @@ class Image private(private val pixels: Array[Array[RGB]], val width: Int, val h
     case _ => false
   }
 
+  override def clone: Image = new Image(Array.tabulate[RGB](width, height)(pixels(_)(_)), width, height)
+
   def removed(seam: Seam): Image = {
-    require((seam forall isDefinedAt), "Seam contains invalid coordinates")
+    require(seam forall isDefinedAt, "Seam contains invalid coordinates")
 
     if (seam.isVertical) verticalRemoval(seam) else horizontalRemoval(seam)
   }
@@ -65,11 +67,11 @@ class Image private(private val pixels: Array[Array[RGB]], val width: Int, val h
   }
 
   def drawn(seam: Seam, color: RGB): Image = {
-    require((seam forall isDefinedAt), "Seam contains invalid coordinates")
+    require(seam forall isDefinedAt, "Seam contains invalid coordinates")
 
-    val copy = Array.tabulate(width, height)(pixels(_)(_))
-    for ((col, row) <- seam) copy(col)(row) = color
-    new Image(copy, width, height)
+    val copy = clone
+    for ((col, row) <- seam) copy.pixels(col)(row) = color
+    copy
   }
 }
 
@@ -82,7 +84,7 @@ object Image {
         val pixels = Array.tabulate[RGB](width, height)(img.getRGB(_, _))
         new Image(pixels, width, height)
       }
-      case None => throw new FileNotFoundException
+      case None => throw new FileNotFoundException("Invalid path")
     }
   }
 
