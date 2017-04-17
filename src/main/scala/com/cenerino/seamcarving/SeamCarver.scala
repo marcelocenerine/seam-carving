@@ -3,8 +3,9 @@ package com.cenerino.seamcarving
 import scala.collection.mutable
 import scala.math._
 
-// TODO refactoring in progress....
 object SeamCarver {
+
+  def nextHorizontalSeam(image: Image): Seam = nextVerticalSeam(image transpose) transpose
 
   def nextVerticalSeam(image: Image): Seam = {
     val width = image.width
@@ -48,7 +49,7 @@ object SeamCarver {
     val (lastColInSeam, _) = distancesAtLastRow minBy (_._2)
     // walks backwards until reaching the start of path
     lazy val seam: Stream[Pos] = Stream.cons((lastColInSeam, lastRowInSeam), seam.map { case (c, r) => edgeTo(c)(r) })
-    (seam take height) reverse
+    Seam.from((seam take height) reverse)
   }
 
   private def verticallyAdjacentPixels(pos: Pos, image: Image): Seq[Pos] = {
@@ -62,56 +63,5 @@ object SeamCarver {
     }
 
     result
-  }
-
-  def nextHorizontalSeam(image: Image): Seam = nextVerticalSeam(image transpose) map (_.swap)
-
-  def removeVerticalSeam(seam: Seam, image: Image): Image = {
-    require(image.width > 1, "Image cannot be vertically resized")
-    require(seam.length == image.height, "Seam length does not match image height")
-    validateSeam(seam, image)
-
-    val newWidth = image.width - 1
-    val output = Image.blank(newWidth, image.height)
-
-    for {
-      (col, row) <- seam
-      targetCol <- 0 until newWidth
-      sourceCol = if (targetCol < col) targetCol else targetCol + 1
-    } output((targetCol, row)) = image((sourceCol, row))
-
-    output
-  }
-
-  def removeHorizontalSeam(seam: Seam, image: Image): Image = {
-    require(image.height > 1, "Image cannot be horizontally resized")
-    require(seam.length == image.width, "Seam length does not match image width")
-    validateSeam(seam, image)
-
-    val newHeight = image.height - 1
-    val output: Image = Image.blank(image.width, newHeight)
-
-    for {
-      (col, row) <- seam
-      targetRow <- 0 until newHeight
-      sourceRow = if (targetRow < row) targetRow else targetRow + 1
-    } output((col, targetRow)) = image((col, sourceRow))
-
-    output
-  }
-
-  private def validateSeam(seam: Seam, image: Image): Unit = {
-    def allEntriesAdjacentToEachOther = {
-      def isAdjacent(predecessor: Pos, current: Pos) = {
-        val (preCol, preRow) = predecessor
-        val (curCol, curRow) = current
-        abs(curCol - preCol) <= 1 && abs(curRow - preRow) <= 1
-      }
-
-      (seam zip (seam tail)) forall { case (pre, current) => isAdjacent(pre, current) }
-    }
-
-    require(seam forall(image.isDefinedAt(_)), "Seam contains invalid coordinates")
-    require(allEntriesAdjacentToEachOther, "One or more adjacent entries differ by more than 1 pixel")
   }
 }

@@ -3,7 +3,6 @@ package com.cenerino
 package object seamcarving {
 
   type Pos = (Int, Int)
-  type Seam = Seq[Pos]
   type RGB = Int
 
   def red(rgb: RGB): Int = (rgb >> 16) & 0xFF

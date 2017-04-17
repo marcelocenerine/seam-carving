@@ -32,6 +32,40 @@ class Image private(private val pixels: Array[Array[RGB]], val width: Int, val h
     case other: Image => this.pixels sameElements other.pixels
     case _ => false
   }
+
+  def removeVerticalSeam(seam: Seam): Image = {
+    require(width > 1, "Image cannot be vertically resized")
+    require(seam.length == height, "Seam length does not match image height")
+    require(seam forall(isDefinedAt), "Seam contains invalid coordinates")
+
+    val newWidth = width - 1
+    val output = Array.ofDim[RGB](newWidth, height)
+
+    for {
+      (col, row) <- seam
+      targetCol <- 0 until newWidth
+      sourceCol = if (targetCol < col) targetCol else targetCol + 1
+    } output(targetCol)(row) = pixels(sourceCol)(row)
+
+    new Image(output, newWidth, height)
+  }
+
+  def removeHorizontalSeam(seam: Seam): Image = {
+    require(height > 1, "Image cannot be horizontally resized")
+    require(seam.length == width, "Seam length does not match image width")
+    require(seam forall(isDefinedAt), "Seam contains invalid coordinates")
+
+    val newHeight = height - 1
+    val output = Array.ofDim[RGB](width, newHeight)
+
+    for {
+      (col, row) <- seam
+      targetRow <- 0 until newHeight
+      sourceRow = if (targetRow < row) targetRow else targetRow + 1
+    } output(col)(targetRow) = pixels(col)(sourceRow)
+
+    new Image(output, width, newHeight)
+  }
 }
 
 object Image {

@@ -18,13 +18,13 @@ object ResizeDemo extends App {
   for (row <- 1 to removeRows) {
     val seam = SeamCarver.nextHorizontalSeam(output)
     //println(s"Removing horizontal seam #$row of $removeRows")
-    output = SeamCarver.removeHorizontalSeam(seam, output)
+    output = output.removeHorizontalSeam(seam)
   }
 
   for (col <- 1 to removeCols) {
     val seam = SeamCarver.nextVerticalSeam(output)
     //println(s"Removing vertical seam #$col of $removeCols")
-    output = SeamCarver.removeVerticalSeam(seam, output)
+    output = output.removeVerticalSeam(seam)
   }
 
   println(s"Output image is ${output.width} columns by ${output.height} rows")
