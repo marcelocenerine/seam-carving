@@ -24,10 +24,6 @@ class Image private(private val pixels: Array[Array[RGB]], val width: Int, val h
     pixels(pos._1)(pos._2) = rgb
   }
 
-  def transpose: Image = {
-    new Image(pixels.transpose, height, width)
-  }
-
   override def equals(that: Any): Boolean = that match {
     case other: Image => Arrays.deepEquals(this.pixels.asInstanceOf[Array[AnyRef]], other.pixels.asInstanceOf[Array[AnyRef]])
     case _ => false
