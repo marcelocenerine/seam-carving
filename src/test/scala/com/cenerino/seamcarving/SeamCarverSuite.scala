@@ -12,12 +12,12 @@ class SeamCarverSuite extends FunSuite {
 
     for (row <- 1 to 100) {
       val seam = SeamCarver.nextHorizontalSeam(output)
-      output = output.removeHorizontalSeam(seam)
+      output = output.removed(seam)
     }
 
     for (col <- 1 to 100) {
       val seam = SeamCarver.nextVerticalSeam(output)
-      output = output.removeVerticalSeam(seam)
+      output = output.removed(seam)
     }
 
 

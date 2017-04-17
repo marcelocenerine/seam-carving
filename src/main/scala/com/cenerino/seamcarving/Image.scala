@@ -3,6 +3,7 @@ package com.cenerino.seamcarving
 import java.awt.image.BufferedImage
 import java.awt.image.BufferedImage.TYPE_INT_RGB
 import java.io.{File, FileNotFoundException}
+import java.util.Arrays
 import javax.imageio.ImageIO
 
 class Image private(private val pixels: Array[Array[RGB]], val width: Int, val height: Int) extends PartialFunction[Pos, RGB]{
@@ -27,16 +28,20 @@ class Image private(private val pixels: Array[Array[RGB]], val width: Int, val h
     new Image(pixels.transpose, height, width)
   }
 
-  // FIXME
   override def equals(that: Any): Boolean = that match {
-    case other: Image => this.pixels sameElements other.pixels
+    case other: Image => Arrays.deepEquals(this.pixels.asInstanceOf[Array[AnyRef]], other.pixels.asInstanceOf[Array[AnyRef]])
     case _ => false
   }
 
-  def removeVerticalSeam(seam: Seam): Image = {
+  def removed(seam: Seam): Image = {
+    require((seam forall isDefinedAt), "Seam contains invalid coordinates")
+
+    if (seam.isVertical) verticalRemoval(seam) else horizontalRemoval(seam)
+  }
+
+  private def verticalRemoval(seam: Seam): Image = {
     require(width > 1, "Image cannot be vertically resized")
     require(seam.length == height, "Seam length does not match image height")
-    require(seam forall(isDefinedAt), "Seam contains invalid coordinates")
 
     val newWidth = width - 1
     val output = Array.ofDim[RGB](newWidth, height)
@@ -50,10 +55,9 @@ class Image private(private val pixels: Array[Array[RGB]], val width: Int, val h
     new Image(output, newWidth, height)
   }
 
-  def removeHorizontalSeam(seam: Seam): Image = {
+  private def horizontalRemoval(seam: Seam): Image = {
     require(height > 1, "Image cannot be horizontally resized")
     require(seam.length == width, "Seam length does not match image width")
-    require(seam forall(isDefinedAt), "Seam contains invalid coordinates")
 
     val newHeight = height - 1
     val output = Array.ofDim[RGB](width, newHeight)
@@ -89,6 +93,7 @@ object Image {
     }.map(ImageIO.read)
   }
 
+  // TODO remove? validate width/height?
   def blank(width: Int, height: Int, color: RGB = White): Image = new Image(Array.ofDim(width, height), width, height)
 
   implicit def image2BufferedImage(image: Image): BufferedImage = {
