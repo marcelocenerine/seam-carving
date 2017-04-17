@@ -5,7 +5,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.math.abs
 
-class Seam private(private val pixels: Seq[Pos]) extends Seq[Pos] {
+class Seam private(private val pixels: IndexedSeq[Pos]) extends Seq[Pos] {
 
   def allEntriesAdjacentToEachOther = {
     def isAdjacent(predecessor: Pos, current: Pos) = {
@@ -41,7 +41,7 @@ class Seam private(private val pixels: Seq[Pos]) extends Seq[Pos] {
 
 object Seam {
 
-  def from(pixels: Seq[Pos]): Seam = new Seam(pixels)
+  def from(pixels: Seq[Pos]): Seam = new Seam(pixels.toVector)
 
   def newBuilder = new ArrayBuffer[Pos] mapResult(from)
 
