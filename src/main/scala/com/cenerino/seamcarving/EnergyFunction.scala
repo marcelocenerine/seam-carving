@@ -38,7 +38,7 @@ private class DualGradient(private val image: Image) extends EnergyFunction {
 
   def energyPicture: Image = {
     val (width, height) = (image.width, image.height)
-    val output = Image.blank(width, height, Black)
+    val output = Array.fill[RGB](width, height)(Black)
     val energyMatrix = Array.tabulate[Double](width, height)(this(_, _))
 
     // maximum gray scale value (ignoring border pixels)
@@ -47,10 +47,10 @@ private class DualGradient(private val image: Image) extends EnergyFunction {
     if (maxVal != 0) {
       for (col <- 0 until width; row <- 0 until height) {
         val normalized = min((energyMatrix(col)(row) / maxVal).toFloat, 1.0f)
-        output((col, row)) = rgb(normalized, normalized, normalized)
+        output(col)(row) = rgb(normalized, normalized, normalized)
       }
     }
 
-    output
+    Image(output)
   }
 }

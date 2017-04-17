@@ -21,9 +21,3 @@ class Frame(image: Image, title: String = "") {
     frame.setVisible(true)
   }
 }
-
-
-//val drawSeam = (seam: Seam) => seam.foreach { case (c, r) => pixels(c)(r) = RED.getRGB }
-//
-//if (showVerticalSeam) drawSeam(nextVerticalSeam(image))
-//if (showHorizontalSeam) drawSeam(nextHorizontalSeam(image))

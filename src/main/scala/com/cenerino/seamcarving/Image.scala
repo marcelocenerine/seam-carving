@@ -8,6 +8,9 @@ import javax.imageio.ImageIO
 
 class Image private(private val pixels: Array[Array[RGB]], val width: Int, val height: Int) extends PartialFunction[Pos, RGB]{
 
+  require(width > 0, "Invalid width")
+  require(height > 0, "Invalid height")
+
   def apply(pos: Pos): RGB = {
     require(isDefinedAt(pos), "Invalid coordinates")
     pixels(pos._1)(pos._2)
@@ -16,12 +19,6 @@ class Image private(private val pixels: Array[Array[RGB]], val width: Int, val h
   override def isDefinedAt(pos: Pos): Boolean = {
     val (col, row) = pos
     col >= 0 && col < width && row >= 0 && row < height
-  }
-
-  // TODO remove?
-  def update(pos: Pos, rgb: RGB): Unit = {
-    require(isDefinedAt(pos), "Invalid coordinates")
-    pixels(pos._1)(pos._2) = rgb
   }
 
   override def equals(that: Any): Boolean = that match {
@@ -66,6 +63,14 @@ class Image private(private val pixels: Array[Array[RGB]], val width: Int, val h
 
     new Image(output, width, newHeight)
   }
+
+  def drawn(seam: Seam, color: RGB): Image = {
+    require((seam forall isDefinedAt), "Seam contains invalid coordinates")
+
+    val copy = Array.tabulate(width, height)(pixels(_)(_))
+    for ((col, row) <- seam) copy(col)(row) = color
+    new Image(copy, width, height)
+  }
 }
 
 object Image {
@@ -89,8 +94,12 @@ object Image {
     }.map(ImageIO.read)
   }
 
-  // TODO remove? validate width/height?
-  def blank(width: Int, height: Int, color: RGB = White): Image = new Image(Array.ofDim(width, height), width, height)
+  def apply(pixels: Array[Array[RGB]]): Image = {
+    val width = pixels.length
+    val heights = pixels.map(_.length).toSet
+    require(heights.size == 1, "Invalid input: rows have inconsistent lengths")
+    new Image(pixels, width, heights.head)
+  }
 
   implicit def image2BufferedImage(image: Image): BufferedImage = {
     val bufferedImage = new BufferedImage(image.width, image.height, TYPE_INT_RGB)

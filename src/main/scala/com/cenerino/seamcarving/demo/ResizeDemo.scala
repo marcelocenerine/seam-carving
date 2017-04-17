@@ -1,6 +1,7 @@
 package com.cenerino.seamcarving.demo
 
 import com.cenerino.seamcarving.{Image, SeamCarver}
+import SeamCarver._
 
 object ResizeDemo extends App {
 
@@ -16,14 +17,14 @@ object ResizeDemo extends App {
   println(s"Input image is ${input.width} columns by ${input.height} rows")
 
   for (row <- 1 to removeRows) {
-    val seam = SeamCarver.nextHorizontalSeam(output)
-    //println(s"Removing horizontal seam #$row of $removeRows")
+    val seam = nextHorizontalSeam(output)
+    // println(s"Removing horizontal seam #$row of $removeRows")
     output = output.removed(seam)
   }
 
   for (col <- 1 to removeCols) {
-    val seam = SeamCarver.nextVerticalSeam(output)
-    //println(s"Removing vertical seam #$col of $removeCols")
+    val seam = nextVerticalSeam(output)
+    // println(s"Removing vertical seam #$col of $removeCols")
     output = output.removed(seam)
   }
 

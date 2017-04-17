@@ -1,7 +1,6 @@
 package com.cenerino.seamcarving
 
 import scala.collection.mutable
-import scala.math._
 
 private sealed abstract class SeamCarver {
   val image: Image
