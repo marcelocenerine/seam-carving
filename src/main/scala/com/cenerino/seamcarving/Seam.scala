@@ -2,13 +2,12 @@ package com.cenerino.seamcarving
 
 import scala.math.abs
 
-sealed abstract class Seam(private val pixels: IndexedSeq[Pos]) extends Seq[Pos] {
+sealed abstract class Seam(private val pixels: Seq[Pos]) extends Seq[Pos] {
 
-  private def areEntriesAdjacent =
-    (pixels sliding 2) forall { case Seq(current, next) => isAdjacent(current, next) }
+  private def allAdjacent = (pixels sliding 2) forall { case Seq(cur, next) => isAdjacent(cur, next) }
 
   require(pixels.length > 0, "Cannot be empty")
-  require(pixels.length == 1 || areEntriesAdjacent, "One or more adjacent entries differ by more than 1 pixel")
+  require(pixels.length == 1 || allAdjacent, "One or more adjacent entries differ by more than 1 pixel")
 
   protected def isAdjacent(current: Pos, next: Pos): Boolean
 
@@ -19,7 +18,7 @@ sealed abstract class Seam(private val pixels: IndexedSeq[Pos]) extends Seq[Pos]
   override def iterator: Iterator[Pos] = pixels.iterator
 }
 
-case class HorizontalSeam(pixels: Seq[Pos]) extends Seam(pixels.toVector) {
+case class HorizontalSeam(pixels: Seq[Pos]) extends Seam(pixels) {
   override protected def isAdjacent(current: Pos, next: Pos) = {
     val (curCol, curRow) = current
     val (nextCol, nextRow) = next
@@ -27,7 +26,7 @@ case class HorizontalSeam(pixels: Seq[Pos]) extends Seam(pixels.toVector) {
   }
 }
 
-case class VerticalSeam(pixels: Seq[Pos]) extends Seam(pixels.toVector) {
+case class VerticalSeam(pixels: Seq[Pos]) extends Seam(pixels) {
   override protected def isAdjacent(current: Pos, next: Pos) = {
     val (curCol, curRow) = current
     val (nextCol, nextRow) = next
