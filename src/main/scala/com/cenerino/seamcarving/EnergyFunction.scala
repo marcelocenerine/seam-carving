@@ -18,7 +18,7 @@ private class DualGradient(private val image: Image) extends EnergyFunction {
     require(image.isDefinedAt(pos), "invalid coordinates")
     val (col, row) = pos
 
-    if (isAtBorder(col, row, image)) BorderEnergy
+    if (isAtBorder(col, row)) BorderEnergy
     else {
       val deltaX = delta(image(col - 1, row), image(col + 1, row))
       val deltaY = delta(image(col, row - 1), image(col, row + 1))
@@ -26,7 +26,7 @@ private class DualGradient(private val image: Image) extends EnergyFunction {
     }
   }
 
-  private def isAtBorder(col: Int, row: Int, image: Image): Boolean =
+  private def isAtBorder(col: Int, row: Int): Boolean =
     (col == 0 || col == image.width - 1) || (row == 0 || row == image.height - 1)
 
   private def delta(rgb1: RGB, rgb2: RGB): Double = {
