@@ -53,11 +53,8 @@ private abstract class SeamCarver {
 }
 
 private class HorizontalCarver(val image: Image) extends SeamCarver {
-
-  val seamLength = width
-
+  override val seamLength = width
   override def startingPixels = (0 until height) map (r => (0, r))
-
   override def endingPixels = (0 until height) map (r => (width - 1, r))
 
   override def adjacentPixels(pos: Pos) =  {
@@ -77,11 +74,8 @@ private class HorizontalCarver(val image: Image) extends SeamCarver {
 }
 
 private class VerticalCarver(val image: Image) extends SeamCarver {
-
-  val seamLength = height
-
+  override val seamLength = height
   override def startingPixels = (0 until width) map (c => (c, 0))
-
   override def endingPixels = (0 until width) map (c => (c, height - 1))
 
   override def adjacentPixels(pos: Pos) =  {
