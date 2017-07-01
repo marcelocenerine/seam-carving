@@ -1,5 +1,5 @@
 # seam-carving
-Algorithm for content-aware image resizing (https://en.wikipedia.org/wiki/Seam_carving)
+Simple implementation of the Seam Carving algorithm for content-aware image resizing (https://en.wikipedia.org/wiki/Seam_carving)
 
 Presentation on [SlideShare](https://www.slideshare.net/marcelocenerine1/seam-carving)
 
