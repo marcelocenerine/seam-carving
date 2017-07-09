@@ -1,4 +1,4 @@
-package com.cenerino.seamcarving
+package seamcarving
 
 import scala.collection.mutable
 

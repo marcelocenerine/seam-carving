@@ -1,7 +1,7 @@
-package com.cenerino.seamcarving.demo
+package seamcarving.demo
 
-import com.cenerino.seamcarving.{Image, SeamCarver}
-import SeamCarver._
+import seamcarving.Image
+import seamcarving.SeamCarver._
 
 object ResizeDemo extends App {
 

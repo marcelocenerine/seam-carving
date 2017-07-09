@@ -19,5 +19,5 @@ Presentation on [SlideShare](https://www.slideshare.net/marcelocenerine1/seam-ca
 
 
 # Usage:
-    scala -classpath <path to jar> com.cenerino.seamcarving.demo.ShowSeams <image filename> <[true|false] show vertical seam> <[true|false] show horizontal seam>
-    scala -classpath <path to jar> com.cenerino.seamcarving.demo.ResizeDemo <image filename> <num cols to remove> <num rows to remove>
+    scala -classpath <path to jar> seamcarving.demo.ShowSeams <image filename> <[true|false] show vertical seam> <[true|false] show horizontal seam>
+    scala -classpath <path to jar> seamcarving.demo.ResizeDemo <image filename> <num cols to remove> <num rows to remove>

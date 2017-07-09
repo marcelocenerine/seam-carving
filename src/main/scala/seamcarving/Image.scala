@@ -1,4 +1,4 @@
-package com.cenerino.seamcarving
+package seamcarving
 
 import java.awt.image.BufferedImage
 import java.awt.image.BufferedImage.TYPE_INT_RGB

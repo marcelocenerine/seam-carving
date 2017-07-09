@@ -1,11 +1,11 @@
-package com.cenerino.seamcarving.demo
+package seamcarving.demo
 
 import java.awt.FlowLayout
 import java.awt.image.BufferedImage
 import javax.swing.{ImageIcon, JFrame, JLabel}
 
-import com.cenerino.seamcarving.Image
-import com.cenerino.seamcarving.Image.image2BufferedImage
+import seamcarving.Image.image2BufferedImage
+import seamcarving.Image
 
 class Frame(image: Image, title: String = "") {
 
